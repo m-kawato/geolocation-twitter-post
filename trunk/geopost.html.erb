@@ -1,0 +1,83 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Geolocation Post</title>
+<style type="text/css">
+body {
+  margin: 40px;
+  font-family: sans-serif;
+  font-size: 300%;
+}
+
+input {
+  font-size: 100%;
+}
+</style>
+
+<script type="text/javascript">
+query_lat = 0;
+query_long = 0;
+
+function callJSONP(url) {  
+  var target = document.createElement('script');  
+  target.charset = 'utf-8';  
+  target.src = url;  
+  document.body.appendChild(target);  
+}  
+
+function showAddress() {  
+  var appid = "<%= @config['yahoo_appid'] %>";  
+  var url = "http://map.yahooapis.jp/LocalSearchService/V1/LocalSearch?appid=" + appid + "&lat=" + encodeURI(query_lat) + "&lon=" + encodeURI(query_long) + "&datum=wgs&category=address&dist=3&al=3&o=json&callback=showResult";  
+  callJSONP(url);  
+}  
+
+function showResult(result) {
+  if ( result.Count > 0 ) {  
+    var addr = result.Item[0].Address;
+
+    var location = document.getElementById("loc_show");
+    location.innerHTML = addr + "<p></p>" +
+      "lat: " + query_lat + "<br>long: " + query_long + "<br>";
+
+    var postdata = document.getElementById("loc_postdata");
+    postdata.innerHTML =
+      "<input type='hidden' name='lat' value='" + query_lat + "'>" +
+      "<input type='hidden' name='long' value='" + query_long + "'>" +
+      "<input type='hidden' name='addr' value='" + addr + "'>";
+//    alert("postdata = " + postdata.innerHTML);
+  } else {  
+    alert( "検索結果が見つかりませんでした。" );  
+  }  
+}
+
+function locUpdate(pos) {
+  query_lat = pos.coords.latitude;
+  query_long = pos.coords.longitude;
+
+  showAddress();
+}
+
+function handleError(a) {
+  var location = document.getElementById("loc_show");
+  location.innerHTML = "<p>error: " + a.code + "</p>";
+}
+
+window.onload = function() {
+  navigator.geolocation.watchPosition(locUpdate, handleError);
+}
+</script>
+</head>
+
+<body>
+<form method="post" action="geopost.cgi">
+<p>【位置情報】</p>
+<div id="loc_show"></div>
+<div id="loc_postdata"></div>
+<p>【コメント】</p>
+<input type="text" name="comment" maxlength=50 value="今ここ：">
+<p></p>
+<input type="submit" value="送信">
+</form>
+</p>
+</body>
+</html>

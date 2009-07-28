@@ -1,0 +1,79 @@
+#!/usr/bin/ruby -Ku
+# -*- coding: UTF-8 -*-
+=begin
+   geopost.cgi
+
+   Copyright 2009 Masahiro Kawato
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+=end
+
+require 'rubygems'
+require 'yaml'
+require 'cgi'
+require 'twitter'
+
+def gen_http_response(cgi, message)
+  if message == nil
+    cgi.out("text/plain") {
+      "failed\r\n"
+    }
+  else
+    cgi.out("type" => "text/html", "charset" => "UTF-8") {
+      <<EOT
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Geolocation Post [Completed]</title>
+<style type="text/css">
+body {
+  margin: 40px;
+  font-family: sans-serif;
+  font-size: 300%;
+}
+
+input {
+  font-size: 100%;
+}
+</style>
+</head>
+
+<body>
+<p>【送信完了】</p>
+#{CGI.escapeHTML(message)}
+</body>
+</html>
+EOT
+    }
+  end
+end
+
+$log = open('<%= @config['logfile'] %>', 'a')
+
+cgi = CGI.new
+lat = cgi['lat']
+long = cgi['long']
+addr = cgi['addr']
+comment = cgi['comment']
+
+$log.puts("lat: #{lat}, long: #{long}, addr: #{addr}, comment: #{comment}")
+
+url = "http://maps.google.co.jp/maps?geocode=&q=#{lat}%2C#{long}"
+message = "[GPS] #{comment} #{addr} #{url}"
+
+$log.puts(message)
+client = Twitter::Client.new(:login => '<%= @config['twitter_user'] %>',
+                             :password => '<%= @config['twitter_password'] %>')
+client.status(:post, message)
+gen_http_response(cgi, message)
+$log.close

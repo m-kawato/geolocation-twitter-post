@@ -1,0 +1,6 @@
+logfile: LOGFILE
+twitter_user: TWITTER_USER_ID
+twitter_password: TWITTER_PASSWORD
+yahoo_appid: YAHOO_APPID
+cgi_dir: /usr/lib/cgi-bin
+html_dir: /var/www
